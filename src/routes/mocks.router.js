@@ -6,7 +6,8 @@ const router = Router();
 
 /**
  * GET /api/mocks/mockingpets
- * Genera 100 mascotas mock (no persiste), formato similar a Mongo./
+ * Genera 100 mascotas mock (no persiste), formato similar a Mongo.
+ */
 router.get('/mockingpets', async (req, res) => {
   const qty = Number.parseInt(req.query.qty ?? '100', 10);
   const payload = generarPets(Number.isFinite(qty) && qty > 0 ? qty : 100);
@@ -32,7 +33,6 @@ router.get('/mockingusers', async (req, res, next) => {
  * POST /api/mocks/generateData
  * Body JSON: { users: number, pets: number }
  * Inserta en la base de datos la cantidad indicada.
- * Requiere conexión a Mongo configurada en src/app.js (URL DE MONGO).
  */
 router.post('/generateData', async (req, res, next) => {
   try {
@@ -43,26 +43,20 @@ router.post('/generateData', async (req, res, next) => {
       return res.status(400).json({ status: 'error', error: 'Parámetros inválidos: users, pets' });
     }
 
-    // Generar documentos
     const [usuarios, mascotas] = await Promise.all([
       generarUsuarios(users),
-      (async () => generarPets(pets))()
+      Promise.resolve(generarPets(pets))
     ]);
 
-    // Remover _id mock para que Mongo genere su propio _id en insert
     const usuariosToInsert = usuarios.map(({ _id, ...doc }) => doc);
     const mascotasToInsert = mascotas.map(({ _id, ...doc }) => doc);
 
-    // Insertar en paralelo vía Repos/DAOs
     const createdUsers = await Promise.all(usuariosToInsert.map(u => usersService.create(u)));
     const createdPets = await Promise.all(mascotasToInsert.map(p => petsService.create(p)));
 
     res.status(201).json({
       status: 'success',
-      inserted: {
-        users: createdUsers.length,
-        pets: createdPets.length
-      }
+      inserted: { users: createdUsers.length, pets: createdPets.length }
     });
   } catch (err) { next(err); }
 });
