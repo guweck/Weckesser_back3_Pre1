@@ -12,6 +12,9 @@ import mocksRouter from './routes/mocks.router.js';
 
 import { addLogger } from './middlewares/logger.js';
 
+import swaggerUi from 'swagger-ui-express';
+import swaggerSpecs from './docs/swagger.js';
+
 const app = express();
 
 const PORT = Number(process.env.PORT || process.env.PUERTO || 8080);
@@ -26,6 +29,9 @@ if (!MONGO_URL) {
 app.use(express.json());
 app.use(cookieParser());
 app.use(addLogger); // adjunta req.logger y loguea cada request (nivel http)
+
+//swagger
+app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpecs));
 
 // Routers
 app.use('/api/users', usersRouter);

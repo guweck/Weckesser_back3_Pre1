@@ -1,0 +1,139 @@
+openapi: 3.0.3
+info:
+  title: Adoptme API – Users
+  version: "1.0.0"
+tags:
+  - name: Users
+paths:
+  /api/users:
+    get:
+      tags: [Users]
+      summary: Listar usuarios
+      responses:
+        "200":
+          description: Lista de usuarios
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, example: success }
+                  payload:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/User'
+  /api/users/{uid}:
+    get:
+      tags: [Users]
+      summary: Obtener usuario por ID
+      parameters:
+        - in: path
+          name: uid
+          required: true
+          schema: { type: string }
+          description: ObjectId de Mongo
+      responses:
+        "200":
+          description: Usuario encontrado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, example: success }
+                  payload:
+                    $ref: '#/components/schemas/User'
+        "404":
+          description: No encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    put:
+      tags: [Users]
+      summary: Actualizar usuario por ID
+      parameters:
+        - in: path
+          name: uid
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserUpdateInput'
+      responses:
+        "200":
+          description: Actualizado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, example: success }
+                  message: { type: string, example: User updated }
+        "400":
+          description: Error de validación
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        "404":
+          description: No encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      tags: [Users]
+      summary: Eliminar usuario por ID
+      parameters:
+        - in: path
+          name: uid
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Eliminado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, example: success }
+                  message: { type: string, example: User deleted }
+        "404":
+          description: No encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        _id: { type: string, example: "66c8e3e9c9bcf0e962ae0d7a" }
+        first_name: { type: string, example: Ada }
+        last_name: { type: string, example: Lovelace }
+        email: { type: string, example: ada@example.com }
+        role: { type: string, example: user }
+        pets:
+          type: array
+          items:
+            type: object
+            properties:
+              _id: { type: string, example: "66c8e3e9c9bcf0e962ae0d88" }
+    UserUpdateInput:
+      type: object
+      properties:
+        first_name: { type: string, example: Ada }
+        last_name: { type: string, example: Lovelace }
+        role: { type: string, example: admin }
+    ErrorResponse:
+      type: object
+      properties:
+        status: { type: string, example: error }
+        error: { type: string, example: User not found }
