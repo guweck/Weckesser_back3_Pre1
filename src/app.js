@@ -13,7 +13,7 @@ import mocksRouter from './routes/mocks.router.js';
 import { addLogger } from './middlewares/logger.js';
 
 import swaggerUi from 'swagger-ui-express';
-import swaggerSpecs from './docs/swagger.js';
+import swaggerSpecs from './docs/swaggers.js';
 
 const app = express();
 
