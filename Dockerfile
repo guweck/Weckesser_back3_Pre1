@@ -16,6 +16,9 @@ WORKDIR /app
 ENV NODE_ENV=production \
     PORT=8080
 
+# curl para el HEALTHCHECK
+RUN apk add --no-cache curl
+
 # Copiar node_modules ya compilados (solo prod)
 COPY --from=deps /app/node_modules ./node_modules
 
@@ -23,13 +26,17 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
 # Crear carpetas y dar permisos para logs/subidas
-RUN mkdir -p uploads \
+RUN mkdir -p uploads logs \
   && chown -R node:node /app
 
-# Ejecutar como usuario no-root (más seguro??)
+# Ejecutar como usuario no-root (más seguro)
 USER node
 
 EXPOSE 8080
+
+# Healthcheck de la API (requiere endpoint /health)
+HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
+  CMD curl -fsS http://localhost:8080/health || exit 1
 
 # Arranque
 CMD ["npm","start"]
