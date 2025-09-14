@@ -1,19 +1,35 @@
+# -------- Etapa 1: deps (con toolchain para compilar bcrypt) --------
 FROM node:20-alpine AS deps
 WORKDIR /app
-COPY package*.json ./
-# build tools para compilar bcrypt
-RUN apk add --no-cache python3 make g++ \
-  && npm ci
 
+# Copiar solo archivos que afectan a la instalación
+COPY package.json package-lock.json* ./
+
+# Toolchain para node-gyp (bcrypt) y deps de PRODUCCIÓN
+RUN apk add --no-cache python3 make g++ \
+  && npm ci --omit=dev
+
+# -------- Etapa 2: runner (imagen final mínima) --------
 FROM node:20-alpine AS runner
 WORKDIR /app
-ENV NODE_ENV=production
+
+ENV NODE_ENV=production \
+    PORT=8080
+
+# Copiar node_modules ya compilados (solo prod)
 COPY --from=deps /app/node_modules ./node_modules
+
+# Copiar el resto del código
 COPY . .
-# Puerto por defecto que usa app.js si no hay PORT
+
+# Crear carpetas y dar permisos para logs/subidas
+RUN mkdir -p uploads \
+  && chown -R node:node /app
+
+# Ejecutar como usuario no-root (más seguro??)
+USER node
+
 EXPOSE 8080
-# Variables que deberías inyectar en runtime:
-# - PORT (opcional)
-# - MONGO_URL (obligatoria)
-# - JWT_SECRET / etc (según tu app)
+
+# Arranque
 CMD ["npm","start"]

@@ -25,22 +25,31 @@ if (!MONGO_URL) {
   process.exit(3);
 }
 
-// Middlewares base
+// ----------------------- Middlewares base -----------------------
 app.use(express.json());
 app.use(cookieParser());
 app.use(addLogger); // adjunta req.logger y loguea cada request (nivel http)
 
-//swagger
-app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpecs));
+// ----------------------- Swagger (condicional) ------------------
+// Habilitar Swagger si estamos fuera de producción O si forzamos con SWAGGER_ENABLED=true
+const isProd = String(process.env.NODE_ENV).toLowerCase() === 'production';
+const swaggerEnabled = process.env.SWAGGER_ENABLED === 'true' || !isProd;
 
-// Routers
+if (swaggerEnabled) {
+  app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpecs));
+  console.log('Swagger UI habilitado en /api/docs');
+} else {
+  console.log('Swagger UI deshabilitado (NODE_ENV=production y SWAGGER_ENABLED!=true)');
+}
+
+// ----------------------------- Routers --------------------------
 app.use('/api/users', usersRouter);
 app.use('/api/pets', petsRouter);
 app.use('/api/adoptions', adoptionsRouter);
 app.use('/api/sessions', sessionsRouter);
 app.use('/api/mocks', mocksRouter);
 
-// Endpoints utilitarios
+// ------------------- Endpoints utilitarios ----------------------
 app.get('/loggerTest', (req, res) => {
   const log = req.logger;
   log.debug('DEBUG: mensaje de depuración');
@@ -52,7 +61,8 @@ app.get('/loggerTest', (req, res) => {
 
   res.json({
     status: 'ok',
-    message: 'Logs enviados. Revisá consola (dev) o errors.log (prod para error/fatal).'
+    message:
+      'Logs enviados. Revisá consola (dev) o errors.log (prod para error/fatal).',
   });
 });
 
@@ -66,7 +76,7 @@ app.get('/errorTest', (_req, _res) => {
   throw new Error('Error intencional');
 });
 
-// Middleware de manejo de errores (simple y centralizado)
+// ----------------- Middleware de errores global -----------------
 app.use((err, req, res, _next) => {
   if (req?.logger) {
     req.logger.error('Unhandled error', { message: err?.message, stack: err?.stack });
@@ -77,10 +87,16 @@ app.use((err, req, res, _next) => {
   res.status(status).json({ status: 'error', error: err?.message || 'Internal Server Error' });
 });
 
-// Conexión a MongoDB
-mongoose.connect(MONGO_URL)
+// ----------------------- Conexión a Mongo -----------------------
+mongoose
+  .connect(MONGO_URL)
   .then(() => console.log('MongoDB conectado'))
-  .catch(err => { console.error('Error conectando a Mongo:', err); process.exit(1); });
+  .catch((err) => {
+    console.error('Error conectando a Mongo:', err);
+    process.exit(1);
+  });
 
-// Arranque del servidor
+// ----------------------- Arranque del server --------------------
 app.listen(PORT, () => console.log(`Listening on ${PORT}`));
+
+export default app;
