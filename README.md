@@ -1,47 +1,37 @@
-# Adoptme – Backend (Coderhouse Backend III)
-Alumno: Gustavo Weckesser
+CODERHOUSE - Módulo BACKEND III
+ENTREGA FINAL
+Alumno Gustavo Weckesser
+# Adoptme – Backend API (Coderhouse Backend III)
 
-Proyecto base del curso con:
+API backend del proyecto **Adoptme**. Incluye:
+- **Swagger** con documentación del módulo **Users** en `/api/docs`.
+- **Testing funcional** con **Mocha + Chai + Supertest** sobre el router de **Adoptions**  
+  _(última corrida local/CI: **6 passing**)_.  
+- Imagen **Docker** pública lista para correr en local.
 
-- **Swagger** documentando el módulo **Users** en `/api/docs`  
-- **Tests funcionales** (Mocha + Chai + Supertest) para **adoption.router.js**  
-- **Imagen Docker** publicada en **Docker Hub**
-
----
-
-## 🔗 Imagen en Docker Hub
-
-- Repositorio: `gweckesser/adoptme-backend`  
-- Etiquetas: `latest`, `1.0.0`  
-- Enlace: https://hub.docker.com/r/gweckesser/adoptme-backend
+> **Credenciales**: los archivos `.env` y `.env.docker` **NO SE INCLUYEN**. Son requeridos. Crearlos en la raíz del proyecto.
+> En la entrega (comentario del envío) se adjuntan los valores para que el corrector pueda ejecutar.
+> Abajo hay plantillas con los nombres de variables.
 
 ---
 
-## 📦 Requisitos
+## Quick start (local)
 
-- Node.js 18+ (solo si vas a correr en modo local)
-- Docker Desktop (para ejecutar en contenedor)
-- Variables de entorno necesarias:
-  - `MONGO_URL` (obligatoria) – cadena de conexión a MongoDB Atlas o local
-  - `PORT` (opcional) – por defecto **8080**
-  CREDENCIALES EN EL TEXTO DE LA ENTREGA (PLATAFORMA CODERHOUSE)
-
-
-## ▶️ Ejecución local (sin Docker)
+1) Clonar el repo y crear `.env` en la raíz (ver plantilla más abajo).  
+2) Instalar dependencias y levantar:
 
 ```bash
 npm ci
 npm start
 ```
-- API: http://localhost:8080  
-- Swagger: http://localhost:8080/api/docs  
-- Healthcheck: http://localhost:8080/health
+
+- API viva: <http://localhost:8080>
+- Swagger: <http://localhost:8080/api/docs>
+- Healthcheck: <http://localhost:8080/health>
 
 ---
 
-## 🧪 Testing
-
-Tests funcionales del **router de Adoptions** con **Mocha + Chai + Supertest**.
+## Tests (Supertest)
 
 ```bash
 npm test
@@ -49,121 +39,88 @@ npm test
 
 Casos cubiertos (esperado: **6 passing**):
 
-- `GET  /api/adoptions` → lista (200)
-- `POST /api/adoptions/:uid/:pid` → adopción OK (200) **y luego** `GET /api/adoptions/:aid` → 200
+- `GET  /api/adoptions` → lista
+- `POST /api/adoptions/:uid/:pid` → adopción OK
 - `POST /api/adoptions/:uid/:pid` → **404** con `uid` inexistente
 - `POST /api/adoptions/:uid/:pid` → **404** con `pid` inexistente
-- `POST /api/adoptions/:uid/:pid` → **400** si la pet ya está adoptada
+- `POST /api/adoptions/:uid/:pid` → **400** sobre pet ya adoptada
 - `GET  /api/adoptions/:aid` → **404** con `aid` inexistente
 
 ---
 
 ## 🐳 Ejecutar con Docker (usando Atlas)
 
-1) CONTENIDO DE LOS ARCHIVOS .env y .env.docker en el texto de la entrega. Ambos archivos se crean en la raíz del proyecto
+> Requiere **Docker Desktop**. El corrector puede usar la imagen publicada o
+> construir localmente. En ambos casos necesita las variables de entorno.
 
-2) Levantar el contenedor desde la **imagen de Docker Hub**:
+### Opción A — Usar imagen publicada
 
-> PowerShell (Windows):
+1) Crear `.env.docker` en la raíz (plantilla más abajo).  
+2) Ejecutar:
 
 ```powershell
-docker rm -f adoptme 2>$null
-docker run --name adoptme `
-  --env-file .\.env.docker `
-  -p 8080:8080 `
+docker run --name adoptme ^
+  --env-file .\.env.docker ^
+  -p 8080:8080 ^
   gweckesser/adoptme-backend:latest
 ```
 
-> Bash (Linux / macOS):
+### Opción B — Construir localmente y correr
 
-```bash
-docker rm -f adoptme 2>/dev/null
-docker run --name adoptme   --env-file ./.env.docker   -p 8080:8080   gweckesser/adoptme-backend:latest
+```powershell
+docker build -t adoptme-backend:local .
+docker run --name adoptme --env-file .\.env.docker -p 8080:8080 adoptme-backend:local
 ```
 
-- API: http://localhost:8080  
-- Swagger: http://localhost:8080/api/docs
+Para detener/borrar si el nombre ya existe:
 
-Para detener y borrar el contenedor:
-```bash
+```powershell
 docker rm -f adoptme
 ```
 
 ---
 
-## 🧱 Construir imagen localmente (opcional)
+## 🔐 Variables de entorno (plantillas)
 
-Si se prefiere construir la imagen a partir del código fuente:
+### `.env` (para `npm start`)
 
-```bash
-docker build -t adoptme-backend:local .
-docker run --name adoptme-local   --env-file ./.env.docker   -p 8080:8080   adoptme-backend:local
+```ini
+MONGO_URL=mongodb+srv://<USER>:<PASS>@cluster0.xxxxxx.mongodb.net/adoptme?retryWrites=true&w=majority&appName=Cluster0
+PORT=8080
 ```
+
+### `.env.docker` (para `docker run`)
+
+```ini
+MONGO_URL=mongodb+srv://<USER>:<PASS>@cluster0.xxxxxx.mongodb.net/adoptme?retryWrites=true&w=majority&appName=Cluster0
+PORT=8080
+```
+
+> En la entrega se comparten los valores reales para `<USER>` y `<PASS>`.
+> Si el corrector prefiere no usar Atlas, se puede levantar Mongo local y
+> apuntar `MONGO_URL` a `mongodb://mongo:27017/adoptme` (ver README original para Compose).
 
 ---
 
-## 🐙 Opción B: Docker Compose (Mongo local) – ideal para corrección sin Atlas
+## Stack / Notas
 
-Si no se desea usar Atlas, se puede levantar un Mongo local junto con la app.  
-Crear **`docker-compose.yml`** en la raíz con el siguiente contenido:
-
-```yaml
-version: "3.9"
-
-services:
-  mongo:
-    image: mongo:6
-    container_name: adoptme-mongo
-    ports:
-      - "27017:27017"
-    volumes:
-      - mongo_data:/data/db
-
-  adoptme:
-    image: gweckesser/adoptme-backend:latest
-    container_name: adoptme
-    environment:
-      MONGO_URL: "mongodb://mongo:27017/adoptme"
-      PORT: "8080"
-    ports:
-      - "8080:8080"
-    depends_on:
-      - mongo
-    restart: unless-stopped
-
-volumes:
-  mongo_data:
-```
-
-Levantar todo:
-
-```bash
-docker compose up -d
-```
-
-- API: http://localhost:8080  
-- Swagger: http://localhost:8080/api/docs
-
-Para apagar los servicios:
-```bash
-docker compose down
-```
+- Node.js 18+ (probado 20.x).
+- **Mongoose 6**, **Express 4**, **Winston** para logging, **compression** activo en producción.
+- Swagger se habilita por defecto en local en `/api/docs`.
+- Endpoints utilitarios: `/health` y `/loggerTest`.
 
 ---
 
-## 📚 Módulos documentados
+## 🔗 Enlaces
 
-- **Users** → Documentado con Swagger en `/api/docs`
-- **Adoptions** → Tests funcionales (Mocha + Chai + Supertest)
-
----
-
-## 📝 Notas
-
-- El logger está configurado y disponible; revisar `/loggerTest` para ver niveles.
-- No se incluye `.env` por seguridad. Usar `.env.docker` para pruebas con Docker.
-- La app escucha por defecto en `PORT=8080` si la variable no está seteada.
+- **Repositorio**: <https://github.com/guweck/Weckesser_back3_Pre1>
+- **Docker Hub**: <https://hub.docker.com/r/gweckesser/adoptme-backend>
 
 ---
 
-¡Gracias por revisar el proyecto! 😊
+## ✅ Criterios de corrección cubiertos
+
+- Swagger con endpoints documentados (al menos 3 detallados) → **sí**.
+- Tests funcionales con Supertest (≥ 3 rutas incluyendo un POST) → **sí** (**6 passing**).
+- Imagen en Docker Hub pública → **sí** (`gweckesser/adoptme-backend:latest`).
+- Mocks de datos disponibles en el módulo correspondiente → **sí**.
