@@ -1,11 +1,26 @@
+# Node / build cache
 node_modules
 npm-debug.log
-Dockerfile*
-.dockerignore
+*.log
+
+# Git / IDE
 .git
 .gitignore
-uploads
+.github
+.vscode
+
+# Artefactos / datos locales
 coverage
-*.log
+logs
+uploads
+
+# Archivos de entorno
 .env
 .env.*
+
+# No copiar tests a la imagen (siguen en el repo)
+test
+
+# Estos no tienen que entrar al contexto
+Dockerfile*
+.dockerignore
