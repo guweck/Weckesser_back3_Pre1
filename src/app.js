@@ -1,7 +1,7 @@
-// src/app.js
 import express from 'express';
 import mongoose from 'mongoose';
 import cookieParser from 'cookie-parser';
+import compression from 'compression';       // ⬅️ nuevo
 import 'dotenv/config';
 
 import usersRouter from './routes/users.router.js';
@@ -28,6 +28,7 @@ if (!MONGO_URL) {
 // ----------------------- Middlewares base -----------------------
 app.use(express.json());
 app.use(cookieParser());
+app.use(compression());                     // ⬅️ nuevo
 app.use(addLogger); // adjunta req.logger y loguea cada request (nivel http)
 
 // ----------------------- Swagger (condicional) ------------------

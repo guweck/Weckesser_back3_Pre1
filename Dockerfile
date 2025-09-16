@@ -2,7 +2,7 @@
 FROM node:20-alpine AS deps
 WORKDIR /app
 
-# Copiar solo archivos que afectan a la instalación
+# Copiar solo manifest para aprovechar cache
 COPY package.json package-lock.json* ./
 
 # Toolchain para node-gyp (bcrypt) y deps de PRODUCCIÓN
@@ -13,21 +13,19 @@ RUN apk add --no-cache python3 make g++ \
 FROM node:20-alpine AS runner
 WORKDIR /app
 
+# Entorno de ejecución por defecto
 ENV NODE_ENV=production \
     PORT=8080
 
 # curl para el HEALTHCHECK
 RUN apk add --no-cache curl
 
-# Copiar node_modules ya compilados (solo prod)
-COPY --from=deps /app/node_modules ./node_modules
+# Copiar node_modules ya compilados (de prod) y código con dueño "node"
+COPY --from=deps --chown=node:node /app/node_modules ./node_modules
+COPY --chown=node:node . .
 
-# Copiar el resto del código
-COPY . .
-
-# Crear carpetas y dar permisos para logs/subidas
-RUN mkdir -p uploads logs \
-  && chown -R node:node /app
+# Crear carpetas necesarias (por si tu app escribe ahí)
+RUN mkdir -p uploads logs
 
 # Ejecutar como usuario no-root (más seguro)
 USER node
