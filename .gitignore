@@ -1,4 +1,7 @@
-node_modules
-/test
+node_modules/
 .env
+.env.docker
 errors.log
+coverage/
+uploads/
+.DS_Store
